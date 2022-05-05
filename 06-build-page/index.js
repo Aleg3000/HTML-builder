@@ -17,26 +17,23 @@ async function makeBundle() {
 }
 
 async function delDir(source) {
-  let files = await fs.readdir(source, { withFileTypes: true });
-  if (files.length !== 0) { 
-    files.forEach(dirent => dirent.isFile() ? fs.rm(path.join(source, dirent.name)) : delDir(path.join(source, dirent.name)));
-  }
-  else fs.rmdir(source);
+  const files = await fs.readdir(source);
+  files.map((file) => fs.rm(path.join(source, file), { recursive: true }));
 }
 
 async function copyDir(from, to) {
   await fs.mkdir(to, { recursive: true});
-  let files = await fs.readdir(from, { withFileTypes: true});
+  const files = await fs.readdir(from, { withFileTypes: true});
   files.forEach(dirent => {
     dirent.isFile() ? fs.copyFile( path.join(from, dirent.name) , path.join(to, dirent.name)) : copyDir(path.join(from, dirent.name), path.join(to, dirent.name));
   });
 }
 
 async function readComponents(dir) {
-  let files = (await fs.readdir(dir, { withFileTypes: true}))
+  const files = (await fs.readdir(dir, { withFileTypes: true}))
     .filter(el => el.isFile() && path.extname(el.name).toLowerCase() === '.html')
     .map(file => file.name);
-  let filesContent = await Promise.all(files.map(file => fs.readFile(path.join(dir, file), 'utf-8')));
+  const filesContent = await Promise.all(files.map(file => fs.readFile(path.join(dir, file), 'utf-8')));
   return files.map((file, i) => ({component: file.split('.')[0], content: filesContent[i]}));
 }
 
